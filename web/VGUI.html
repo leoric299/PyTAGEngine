@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8"/>
+    <style>
+        body{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: darkslategray;
+            font-size: 20px;
+        }
+        #screen{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 396px;
+            height: 857px;
+            background-color: lightslategrey;
+            border-style: outset;
+            border-color: lightsteelblue;
+            border-width: 2px;
+            border-radius: 5px;
+            font-family: Microsoft YaHei, SimHei, Consolas, Courier, monospace, sans-serif;
+        }
+        #console_log{
+            margin: 5px;
+            width: 372px;
+            height: 958px;
+            padding: 5px;
+            background-color: whitesmoke;
+            border-style: inset;
+            border-color: lightsteelblue;
+            border-width: 2px;
+            border-radius: 5px;
+            overflow-y: scroll;
+            resize: none;
+            outline: none;
+            font-size: 20px;
+        }
+        #console_image{
+            margin: 5px;
+            width: 372px;
+            height: 150px;
+            padding: 5px;
+            background-color: whitesmoke;
+            border-style: inset;
+            border-color: lightsteelblue;
+            border-width: 2px;
+            border-radius: 5px;
+            /* overflow-y: scroll; */
+            resize: none;
+            outline: none;
+            font-size: 20px;
+        }
+        .session_box{
+            background-color: lavenderblush;
+            border-style: solid;
+            border-color: oldlace;
+            border-width: 2px;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .console_line{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content:end;
+            margin: 0px 5px 5px 5px;
+            padding: 0px;
+            width: 386px;
+            height: 50px;
+        }
+        #console_updiv{
+            margin-top: 5px;
+        }
+        #console_input{
+            margin: 0px;
+            width: 1px;
+            flex-grow: 1;
+            height: 15px;
+            padding: 5px;
+            background-color: lightgoldenrodyellow;
+            border-style: inset;
+            border-color: lightsteelblue;
+            border-width: 2px;
+            border-radius: 5px;
+            outline: none;
+            font-size: 20px;
+            line-height: 15px;
+        }
+        .bottom_button{
+            margin: 0px 0px 0px 5px;
+            width: 74px;
+            height: 39px;
+            padding: 5px;
+            background-color: lightblue;
+            border-style: outset;
+            border-color: lightsteelblue;
+            border-width: 2px;
+            border-radius: 5px;
+            font-size: 20px;
+            line-height: 15px;
+        }
+        .bottom_button:hover{
+            background-color: lightseagreen;
+        }
+        .btn_long{
+            width: 108px;
+        }
+        #console_send:active{
+            border-style: inset;
+        }
+        #space{
+            margin: 0px 0px 0px 5px;
+            width: 54px;
+            flex-grow: 1;
+            height: 29px;
+            padding: 5px;
+            background-color: transparent;
+            border-style: none;
+            border-color: transparent;
+            border-width: 2px;
+            border-radius: 5px;
+            font-size: 20px;
+            line-height: 15px;
+        }
+        #console_title{
+            flex-grow: 1;
+        }
+        .adaptive-img {
+            width: 100%; /* 设置图片宽度自适应 */
+            height: 100%; /* 高度保持自动 */
+            object-fit: cover; /* 图片截取并填充 */
+        }
+    </style>
+</head>
+<script>
+    var node_log;
+    var node_input;
+    var node_send;
+    var HttpClient = function () {
+        this.get = function (aUrl, aCallback) {
+            var anHttpRequest = new XMLHttpRequest();
+            anHttpRequest.onreadystatechange = function () {
+                if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                    aCallback(anHttpRequest.responseText);
+            }
+
+            anHttpRequest.open("GET", aUrl, true);
+            anHttpRequest.send(null);
+        }
+    }
+
+    function Init(){
+        var client = new HttpClient();
+        node_log = document.getElementById("console_log");
+        // node_input = document.getElementById("console_input");
+        node_send = document.getElementById("console_send");
+        client.get('/?choice=-1', function (response) {
+            // do something with response
+            // console.log(response)
+            ShowUpRes(response)
+        });
+        ShowbackToTitle()
+    }
+    var output_lock = false
+    function GotChoice(v){
+        if(!output_lock){
+            var client = new HttpClient();
+            client.get('/?choice='+v, function (response) {
+                // do something with response
+                // console.log(response)
+                ShowUpRes(response)
+            });
+            ShowbackToTitle()
+        }
+    }
+    function ProcessCommand(cmd){
+        if(cmd.length>0){
+            Output(ColorString("收到：","darkgreen")+ColorString(cmd,"black"))
+        }
+    }
+    function ShowbackToTitle(){
+        document.getElementById("console_title").style="";
+        document.getElementById("console_reset").style="display:none;";
+        document.getElementById("console_yes").style="display:none;";
+        document.getElementById("console_no").style="display:none;";
+    }
+    function GotTitle(){
+        document.getElementById("console_title").style="display:none;";
+        document.getElementById("console_reset").style="";
+        document.getElementById("console_yes").style="display:none;";
+        document.getElementById("console_no").style="display:none;";
+    }
+    function GotReset(){
+        document.getElementById("console_title").style="display:none;";
+        document.getElementById("console_reset").style="display:none;";
+        document.getElementById("console_yes").style="";
+        document.getElementById("console_no").style="";
+    }
+    function GotResetY(){
+        var client = new HttpClient();
+        client.get('/?choice=-2', function (response) {
+            // do something with response
+            // console.log(response)
+            ShowUpRes(response)
+        });
+        ShowbackToTitle()
+    }
+    function GotResetN(){
+        ShowbackToTitle()
+    }
+    function ColorString(content,color){
+        return "<font color='"+color+"'>"+content+"</font>"
+    }
+    function Output(res_list,res_function){
+        output_lock = true
+        // console.log(res_list)
+        // node_log.innerHTML += "<p class='session_box'>" + content + "</p>";
+        // node_log.innerHTML += content + end;
+        var index = 0
+        var interval = setInterval(function() {
+        if (index < res_list.length) {
+                node_log.innerHTML += res_list[index];
+        node_log.scrollTop = node_log.scrollHeight - node_log.clientHeight;
+                index++;
+            } else {
+                clearInterval(interval);
+                output_lock = false
+                res_function()
+            }
+        }, 45); // 调整数值可以改变打字速度
+    }
+    function ShowUpRes(response){
+        for(var i = 1;i<=4;i++){
+            document.getElementById("console_send_"+i).style="display:none;";
+        }
+        res = JSON.parse(response)
+        if(res.hasOwnProperty("image")){
+            document.getElementById("game_img").src= "/datas/imgs/" + res.image;
+        }
+        res_list = res.str.split('')
+        // res_list.concat(res.str.split(''))
+        // console.log(res_list)
+        // Output(res.str)
+        choice_num = 0
+        if(res.hasOwnProperty("choice")){
+            res.choice.forEach(cc => {
+                choice_num += 1
+                thiscc = "["+choice_num+"]"+cc[0] 
+                res_list.push("<br>")
+                thiscc.split('').forEach(ch => {
+                    res_list.push(ColorString(ch,"blue"))
+                })
+                // res_list.push(ColorString("["+choice_num+"]"+cc[0],"blue"))
+                // Output(ColorString("["+choice_num+"]"+cc[0],"blue"))
+            });
+        }
+        if(res.hasOwnProperty("title")){
+            document.getElementById("console_title").innerText = res.title;
+        }
+        for(var i =0;i<res_list.length;i++){
+            if(res_list[i]=='\n'){
+                res_list[i] = "<br>"
+            }
+        }
+        res_list.push("<br>")
+        res_list.push("<br>")
+        Output(res_list,function () {
+                for(var i = 1;i<=choice_num;i++){
+                    document.getElementById("console_send_"+i).style="";
+                }
+                for(var i = choice_num+1;i<=4;i++){
+                    document.getElementById("console_send_"+i).style="display:none;";
+                }
+            })
+    }
+</script>
+<body onload="Init()">
+    <div id="screen">
+        <div class="console_line" id="console_updiv">
+            <!-- <input style="display: none;" id="console_input" placeholder="" /> -->
+            <button class="bottom_button" id="console_title" onclick="GotTitle()"></button>
+            <button class="bottom_button btn_long" style="display: none;" id="console_reset" onclick="GotReset()">重新开始</button>
+            <button class="bottom_button btn_long" style="display: none;" id="console_reset" onclick="">更换书籍</button>
+            <button class="bottom_button" style="display: none;" id="console_yes" onclick="GotResetY()">是</button>
+            <button class="bottom_button" style="display: none;" id="console_no" onclick="GotResetN()">否</button>
+        </div>
+        <div id="console_image" readonly>
+            <img id="game_img" class="adaptive-img" src="">
+        </div>
+        <div id="console_log" readonly></div>
+        <div class="console_line" id="console_inputdiv">
+            <!-- <input style="display: none;" id="console_input" placeholder="" /> -->
+            <button class="bottom_button" style="display:none;" id="console_send_1" onclick="GotChoice(1)">1</button>
+            <button class="bottom_button" style="display:none;" id="console_send_2" onclick="GotChoice(2)">2</button>
+            <button class="bottom_button" style="display:none;" id="console_send_3" onclick="GotChoice(3)">3</button>
+            <button class="bottom_button" style="display:none;" id="console_send_4" onclick="GotChoice(4)">4</button>
+            <p id="space"></p>
+            <button class="bottom_button" id="console_send" onclick="GotChoice(0)">嗯</button>
+        </div>
+    </div>
+</body>
