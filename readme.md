@@ -3,6 +3,7 @@
 2. build.py 用于生成可运行的故事结构体（基于story.md生成story.json）
 3. server.py 用于进行游玩，（加载story.json，使用网页进行交互）
 4. player_save.json 用于保存玩家存档
+5. test
 
 # 魔法命令
     - [code] (args....)
